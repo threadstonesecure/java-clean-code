@@ -1,0 +1,29 @@
+INSERT INTO USER (FIRST_NAME, LAST_NAME,  EMAIL) VALUES ('Krishna', 'Murthi', 'kmurthi@gmail.com');
+INSERT INTO ADDRESS (STREET_NAME, CITY, STATE,  PIN_CODE, USER_ID) 
+	VALUES ('Juhu', 'Mumbai', 'Maharastra', 400049, 1);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Saving', 5000.00, 1);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Current', 100.00, 1);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Saving Account opened successfully', 1);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Current Account opened successfully', 1);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Money Transfered from saving account', 1);
+INSERT INTO TRANSACTION (TYPE, AMOUNT, DESC, USER_ID, ACCOUNT_ID ) VALUES ('DEBIT', 100.00, 'KFC', 1, 1);
+
+INSERT INTO USER (FIRST_NAME, LAST_NAME,  EMAIL) VALUES ('Rohini', 'Vanga', 'rvanga@gmail.com');
+INSERT INTO ADDRESS (STREET_NAME, CITY, STATE,  PIN_CODE, USER_ID) 
+	VALUES ('Kondapur', 'Hyderabad', 'Telangana', 500080, 2);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Saving', 25000.00, 2);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Current', 1000.00, 2);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Saving Account opened successfully', 2);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Current Account opened successfully', 2);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Money Transfered from saving account', 2);
+INSERT INTO TRANSACTION (TYPE, AMOUNT, DESC, USER_ID, ACCOUNT_ID ) VALUES ('DEBIT', 100.00, 'KFC', 2, 3);
+
+INSERT INTO USER (FIRST_NAME, LAST_NAME,  EMAIL) VALUES ('Srikanth', 'Raju', 'sraju@gmail.com');
+INSERT INTO ADDRESS (STREET_NAME, CITY, STATE,  PIN_CODE, USER_ID) 
+	VALUES ('Madhapur', 'Hyderabad', 'Telangana', 500080, 3);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Saving', 2500.00, 3);
+INSERT INTO ACCOUNT (TYPE, BALANCE, USER_ID ) VALUES ('Current', 1020.00, 3);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Saving Account opened successfully', 3);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Current Account opened successfully', 3);
+INSERT INTO NOTE (DESC, USER_ID ) VALUES ('Money Transfered from saving account', 3);
+INSERT INTO TRANSACTION (TYPE, AMOUNT, DESC, USER_ID, ACCOUNT_ID ) VALUES ('DEBIT', 100.00, 'KFC', 3, 5);
