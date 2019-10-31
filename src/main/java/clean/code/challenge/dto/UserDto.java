@@ -3,14 +3,19 @@ package clean.code.challenge.dto;
 import java.util.Date;
 import java.util.List;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+
+import clean.code.challenge.util.Status;
 import lombok.Getter;
 import lombok.Setter;
-import clean.code.challenge.util.Status;
 
 @Getter
 @Setter
-public class UserDto {
 
+public class UserDto {
+	 @NotBlank(message = "UserId is mandatory")
+	 @Min(1)
 	private Integer id;
 
 	private String firstName;

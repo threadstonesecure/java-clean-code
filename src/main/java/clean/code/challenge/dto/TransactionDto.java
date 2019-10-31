@@ -4,17 +4,22 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
 
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class TransactionDto extends ErrorDto {
+public class TransactionDto {
 
 	private Integer id;
 
 	private String type;
-
+	@JsonIgnore
+	private TransactionType transactionType;
 	private BigDecimal amount;
 
 	private String description;
@@ -25,6 +30,7 @@ public class TransactionDto extends ErrorDto {
 
 	private Date modifiedDate;
 
+	@NotNull
 	private UserDto user;
 
 	@Override
