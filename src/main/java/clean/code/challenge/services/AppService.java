@@ -15,6 +15,7 @@ import clean.code.challenge.dto.TransactionType;
 import clean.code.challenge.dto.UserDto;
 import clean.code.challenge.exceptions.AppException;
 import clean.code.challenge.exceptions.ValidationException;
+import clean.code.challenge.mapper.TransactionMapper;
 import clean.code.challenge.mapper.UserMapper;
 import clean.code.challenge.model.Account;
 import clean.code.challenge.model.Note;
@@ -33,6 +34,8 @@ public class AppService {
 
 	@Resource
 	public UserMapper userMapper;
+	@Resource
+	public TransactionMapper transactionMapper;
 
 	public UserDto getUser(Integer userId) {
 		return userMapper.toDto(getUserBasedOnUserId(userId));
@@ -45,11 +48,9 @@ public class AppService {
 		return user;
 	}
 
-	public TransactionDto performTransaction(TransactionDto transactionDto) {
+	public TransactionDto performUserTransaction(TransactionDto transactionDto) {
 		validateRequest(transactionDto);
-		TransactionDto transaction = handleTransaction(transactionDto,
-				TransactionType.valueOf(transactionDto.getType()));
-		return transaction;
+		return handleTransaction(transactionDto, TransactionType.valueOf(transactionDto.getType()));
 	}
 
 	private void validateRequest(TransactionDto transactionDto) {
@@ -75,58 +76,37 @@ public class AppService {
 	}
 
 	private TransactionDto handleTransaction(TransactionDto transactionDto, TransactionType transactionType) {
-		try {
-			User user = getUserBasedOnUserId(transactionDto.getUser().getId());
-			if (CollectionUtils.isNotEmpty(user.getAccounts())) {
-				validateAccount(user.getAccounts(), transactionDto);
-				user.getAccounts().stream().filter(account -> account.getId().equals(transactionDto.getAccountId()))
-						.forEach(userAccount -> updateBalanceAmount(transactionDto, transactionType, userAccount));
-			}
-			return performTransaction(transactionDto, user, transactionType);
-		} catch (final Exception exception) {
-			throw new AppException(exception.getMessage(), exception);
+		TransactionDto commitedTransaction = null;
+		User user = getUserBasedOnUserId(transactionDto.getUser().getId());
+		if (CollectionUtils.isNotEmpty(user.getAccounts())) {
+			validateAccount(user.getAccounts(), transactionDto);
+			updateBalanceAmount(user.getAccounts(), transactionDto, transactionType);
+			commitedTransaction = commmitTransaction(transactionDto, user, transactionType);
+		} else {
+			throw new AppException("No account is linked to the user");
 		}
+
+		return commitedTransaction;
 	}
 
-	private void updateBalanceAmount(TransactionDto transactionDto, TransactionType transactionType,
-			Account userAccount) {
-		BigDecimal balanceAmount = BigDecimal.ZERO;
-		if (TransactionType.DEBIT.equals(transactionType)) {
-			if (userAccount.getBalance().compareTo(transactionDto.getAmount()) < 0) {
-				throw new ValidationException("Amount is not sufficient to perform the transaction");
-			}
-			balanceAmount = userAccount.getBalance().subtract(transactionDto.getAmount());
-		} else if (TransactionType.CREDIT.equals(transactionType)) {
-			balanceAmount = userAccount.getBalance().add(transactionDto.getAmount());
-		}
-		userAccount.setBalance(balanceAmount);
-	}
-
-	private TransactionDto performTransaction(TransactionDto transactionDto, final User user,
+	private void updateBalanceAmount(List<Account> userAccounts, TransactionDto transactionDto,
 			TransactionType transactionType) {
-		// Add Transaction
-		final Transaction transaction = saveTransaction(transactionDto, user, transactionType);
-		return updateTransaction(user, transaction, transactionType);
+		userAccounts.stream().filter(account -> account.getId().equals(transactionDto.getAccountId()))
+				.forEach(userAccount -> {
+					BigDecimal balanceAmount = BigDecimal.ZERO;
+					if (TransactionType.DEBIT.equals(transactionType)) {
+						if (userAccount.getBalance().compareTo(transactionDto.getAmount()) < 0) {
+							throw new ValidationException("Amount is not sufficient to perform the transaction");
+						}
+						balanceAmount = userAccount.getBalance().subtract(transactionDto.getAmount());
+					} else if (TransactionType.CREDIT.equals(transactionType)) {
+						balanceAmount = userAccount.getBalance().add(transactionDto.getAmount());
+					}
+					userAccount.setBalance(balanceAmount);
+				});
 	}
 
-	private TransactionDto updateTransaction(final User user, final Transaction transaction,
-			TransactionType transactionType) {
-		// Add Note
-		final Note note = new Note();
-		note.setDescription(transactionType.transactionSuccessMsg());
-		note.setUser(user);
-
-		// Save
-		user.getTransactions().add(transaction);
-		user.getNotes().add(note);
-		final User savedUser = userRepository.save(user);
-		log.info(transactionType.transactionLogMsg());
-		final UserDto userDto = userMapper.toDto(savedUser);
-		final List<TransactionDto> transactions = userDto.getTransactions();
-		return transactions.get(transactions.size() - 1);
-	}
-
-	private Transaction saveTransaction(TransactionDto transactionDto, final User user,
+	private TransactionDto commmitTransaction(TransactionDto transactionDto, final User user,
 			TransactionType transactionType) {
 		final Transaction transaction = new Transaction();
 		transaction.setAccountId(transactionDto.getAccountId());
@@ -134,7 +114,14 @@ public class AppService {
 		transaction.setDescription(transactionType.transactionSuccessMsg());
 		transaction.setType(transactionType.toString());
 		transaction.setUser(user);
-		return transaction;
+		final Note note = new Note();
+		note.setDescription(transactionType.transactionSuccessMsg());
+		note.setUser(user);
+		user.getTransactions().add(transaction);
+		user.getNotes().add(note);
+		userRepository.save(user);
+		log.info(transactionType.transactionLogMsg());
+		return transactionMapper.toDto(transaction);
 	}
 
 }

@@ -38,8 +38,8 @@ public class AppController {
 	}
 
 	@PostMapping(ChallengeConstants.USER_TRANSACTIONS_ENDPOINT)
-	public ResponseEntity<TransactionDto> transactions(@Valid @RequestBody TransactionDto transactionDto) {
-		TransactionDto transaction = appService.performTransaction(transactionDto);
+	public ResponseEntity<TransactionDto> userTransaction(@Valid @RequestBody TransactionDto transactionDto) {
+		TransactionDto transaction = appService.performUserTransaction(transactionDto);
 		return new ResponseEntity<>(transaction, HttpStatus.CREATED);
 	}
 
