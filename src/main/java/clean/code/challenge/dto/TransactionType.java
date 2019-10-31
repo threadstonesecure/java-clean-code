@@ -1,7 +1,5 @@
 package clean.code.challenge.dto;
 
-import org.apache.commons.lang3.StringUtils;
-
 public enum TransactionType {
 	CREDIT("CREDIT") {
 		@Override
@@ -36,10 +34,10 @@ public enum TransactionType {
 	}
 
 	public String transactionSuccessMsg() {
-		return StringUtils.EMPTY;
+		return "";
 	}
 
 	public String transactionLogMsg() {
-		return StringUtils.EMPTY;
+		return "";
 	}
 }

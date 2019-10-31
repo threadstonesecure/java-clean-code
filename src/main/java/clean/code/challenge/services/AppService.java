@@ -7,8 +7,8 @@ import javax.annotation.Resource;
 import javax.persistence.EntityNotFoundException;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import clean.code.challenge.dto.TransactionDto;
 import clean.code.challenge.dto.TransactionType;
@@ -47,16 +47,9 @@ public class AppService {
 
 	public TransactionDto performTransaction(TransactionDto transactionDto) {
 		validateRequest(transactionDto);
-		switch (TransactionType.valueOf(transactionDto.getType())) {
-		case DEBIT:
-			handleTransaction(transactionDto, TransactionType.DEBIT);
-			break;
-		case CREDIT:
-			handleTransaction(transactionDto, TransactionType.CREDIT);
-			break;
-		}
-
-		return null;
+		TransactionDto transaction = handleTransaction(transactionDto,
+				TransactionType.valueOf(transactionDto.getType()));
+		return transaction;
 	}
 
 	private void validateRequest(TransactionDto transactionDto) {
@@ -89,7 +82,6 @@ public class AppService {
 				user.getAccounts().stream().filter(account -> account.getId().equals(transactionDto.getAccountId()))
 						.forEach(userAccount -> updateBalanceAmount(transactionDto, transactionType, userAccount));
 			}
-
 			return performTransaction(transactionDto, user, transactionType);
 		} catch (final Exception exception) {
 			throw new AppException(exception.getMessage(), exception);
