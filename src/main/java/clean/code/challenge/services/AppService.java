@@ -85,7 +85,6 @@ public class AppService {
 		} else {
 			throw new AppException("No account is linked to the user");
 		}
-
 		return commitedTransaction;
 	}
 
