@@ -106,20 +106,30 @@ public class AppService {
 
 	private TransactionDto commmitTransaction(TransactionDto transactionDto, final User user,
 			TransactionType transactionType) {
-		final Transaction transaction = new Transaction();
+		Transaction transaction = getTransaction(transactionDto, user, transactionType);
+		user.getTransactions().add(getTransaction(transactionDto, user, transactionType));
+		user.getNotes().add(getNotes(user, transactionType));
+		userRepository.save(user);
+		log.info(transactionType.transactionLogMsg());
+		return transactionMapper.toDto(transaction);
+	}
+
+	private Transaction getTransaction(TransactionDto transactionDto, final User user,
+			TransactionType transactionType) {
+		Transaction transaction = new Transaction();
 		transaction.setAccountId(transactionDto.getAccountId());
 		transaction.setAmount(transactionDto.getAmount());
 		transaction.setDescription(transactionType.transactionSuccessMsg());
 		transaction.setType(transactionType.toString());
 		transaction.setUser(user);
-		final Note note = new Note();
+		return transaction;
+	}
+
+	private Note getNotes(final User user, TransactionType transactionType) {
+		Note note = new Note();
 		note.setDescription(transactionType.transactionSuccessMsg());
 		note.setUser(user);
-		user.getTransactions().add(transaction);
-		user.getNotes().add(note);
-		userRepository.save(user);
-		log.info(transactionType.transactionLogMsg());
-		return transactionMapper.toDto(transaction);
+		return note;
 	}
 
 }
