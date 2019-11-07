@@ -2,6 +2,7 @@ package clean.code.challenge.services;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityNotFoundException;
@@ -50,7 +51,9 @@ public class AppService {
 
 	public TransactionDto performUserTransaction(TransactionDto transactionDto) {
 		validateRequest(transactionDto);
-		return handleTransaction(transactionDto, TransactionType.valueOf(transactionDto.getType()));
+		User user = getUserBasedOnUserId(transactionDto.getUser().getId());
+		Account userAccount = validateAndGetUserAccount(user.getAccounts(), transactionDto);
+		return handleTransaction(user, userAccount, transactionDto);
 	}
 
 	private void validateRequest(TransactionDto transactionDto) {
@@ -65,44 +68,40 @@ public class AppService {
 		}
 	}
 
-	private void validateAccount(List<Account> accounts, TransactionDto transactionDto) {
-		boolean isAccountActive = accounts.stream()
-				.anyMatch(account -> account.getId().equals(transactionDto.getAccountId())
-						&& (Status.ACTIVE.equals(account.getStatus())));
-		if (!isAccountActive) {
-			log.info("Account Id is not valid or in-active");
-			throw new ValidationException("Account Id doesn't exists or in-active");
-		}
-	}
+	private Account validateAndGetUserAccount(List<Account> accounts, TransactionDto transactionDto) {
+		Account activeUserAccount = null;
+		if (CollectionUtils.isNotEmpty(accounts)) {
+			Optional<Account> userAccount = accounts.stream()
+					.filter(account -> account.getId().equals(transactionDto.getAccountId())
+							&& (Status.ACTIVE.equals(account.getStatus())))
+					.findFirst();
+			activeUserAccount = userAccount
+					.orElseThrow(() -> new ValidationException("Account Id doesn't exists or in-active"));
 
-	private TransactionDto handleTransaction(TransactionDto transactionDto, TransactionType transactionType) {
-		TransactionDto commitedTransaction = null;
-		User user = getUserBasedOnUserId(transactionDto.getUser().getId());
-		if (CollectionUtils.isNotEmpty(user.getAccounts())) {
-			validateAccount(user.getAccounts(), transactionDto);
-			updateBalanceAmount(user.getAccounts(), transactionDto, transactionType);
-			commitedTransaction = commmitTransaction(transactionDto, user, transactionType);
 		} else {
 			throw new AppException("No account is linked to the user");
 		}
-		return commitedTransaction;
+		return activeUserAccount;
 	}
 
-	private void updateBalanceAmount(List<Account> userAccounts, TransactionDto transactionDto,
+	private TransactionDto handleTransaction(User user, Account userAccount, TransactionDto transactionDto) {
+		TransactionType transactionType = TransactionType.valueOf(transactionDto.getType());
+		updateBalanceAmount(userAccount, transactionDto, transactionType);
+		return commmitTransaction(transactionDto, user, transactionType);
+	}
+
+	private void updateBalanceAmount(Account userAccount, TransactionDto transactionDto,
 			TransactionType transactionType) {
-		userAccounts.stream().filter(account -> account.getId().equals(transactionDto.getAccountId()))
-				.forEach(userAccount -> {
-					BigDecimal balanceAmount = BigDecimal.ZERO;
-					if (TransactionType.DEBIT.equals(transactionType)) {
-						if (userAccount.getBalance().compareTo(transactionDto.getAmount()) < 0) {
-							throw new ValidationException("Amount is not sufficient to perform the transaction");
-						}
-						balanceAmount = userAccount.getBalance().subtract(transactionDto.getAmount());
-					} else if (TransactionType.CREDIT.equals(transactionType)) {
-						balanceAmount = userAccount.getBalance().add(transactionDto.getAmount());
-					}
-					userAccount.setBalance(balanceAmount);
-				});
+		BigDecimal balanceAmount = userAccount.getBalance();
+		if (TransactionType.DEBIT.equals(transactionType)) {
+			if (balanceAmount.compareTo(transactionDto.getAmount()) < 0) {
+				throw new ValidationException("Amount is not sufficient to perform the transaction");
+			}
+			balanceAmount = balanceAmount.subtract(transactionDto.getAmount());
+		} else if (TransactionType.CREDIT.equals(transactionType)) {
+			balanceAmount = balanceAmount.add(transactionDto.getAmount());
+		}
+		userAccount.setBalance(balanceAmount);
 	}
 
 	private TransactionDto commmitTransaction(TransactionDto transactionDto, final User user,
