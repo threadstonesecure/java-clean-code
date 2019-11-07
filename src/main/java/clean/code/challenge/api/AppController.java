@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import clean.code.challenge.dto.ChallengeConstants;
 import clean.code.challenge.dto.TransactionDto;
 import clean.code.challenge.dto.UserDto;
 import clean.code.challenge.services.AppService;
+import clean.code.challenge.util.ChallengeConstants;
 
 @RestController
 @Validated

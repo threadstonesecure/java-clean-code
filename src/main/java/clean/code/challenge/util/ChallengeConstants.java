@@ -1,4 +1,4 @@
-package clean.code.challenge.dto;
+package clean.code.challenge.util;
 
 public interface ChallengeConstants {
 	String ROOT_ENDPOINT = "/";
